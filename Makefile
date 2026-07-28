@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 PY := backend/.venv/bin
-PYTHON ?= python3.13
+PYTHON ?= python3.12
 
 .PHONY: help install db db-stop db-reset migrate seed api web dev test test-backend test-web e2e lint typecheck build gate corpus docker-up docker-down clean
 
