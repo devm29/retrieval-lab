@@ -7,7 +7,7 @@
 **Hybrid RAG where retrieval quality is the product, and every change is measured before it ships.**
 
 BM25 + pgvector, fused with RRF, reranked by a cross-encoder, answered with citations,<br/>
-scored against a golden set, and guarded by a CI gate that fails when quality drops.
+scored against a golden set, and guarded by a quality gate that fails when quality drops.
 
 <br/>
 
@@ -20,10 +20,9 @@ scored against a golden set, and guarded by a CI gate that fails when quality dr
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](web)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](web/tsconfig.json)
 [![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-Radix-000000?logo=shadcnui&logoColor=white)](web/components.json)
-[![Quality gate](https://img.shields.io/badge/CI-retrieval%20quality%20gate-2088FF?logo=githubactions&logoColor=white)](.github/workflows/eval-gate.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-34C759)](LICENSE)
 
-[Why](#why-this-exists) · [Features](#features) · [Screenshots](#screenshots) · [Architecture](#architecture) · [Quickstart](#quickstart) · [Metrics](#what-the-numbers-mean) · [API](#api-overview)
+[Why](#why-this-exists) · [Features](#features) · [Screenshots](#screenshots) · [Architecture](#architecture) · [Quickstart](#quickstart) · [Metrics](#what-the-numbers-mean) · [API](#api-overview) · [Examples](#request-and-response-examples)
 
 <br/>
 
@@ -46,7 +45,7 @@ Retrieval Lab treats a retrieval pipeline like any other piece of software that 
 - **Pipelines are data.** Each retrieval strategy is a versioned, hash-addressed Pydantic config, not a code branch.
 - **Quality is measured.** Every config is scored against the same golden set with IR metrics (recall@k, MRR, nDCG@k) and generation metrics (faithfulness, answer relevance, citation accuracy), plus latency and cost for each stage.
 - **The judge is checked too.** The LLM-as-judge is calibrated against human labels, and the agreement is reported as Cohen's kappa.
-- **Regressions fail the build.** A GitHub Actions gate re-scores the config fully offline and exits non-zero when nDCG or faithfulness drops beyond tolerance.
+- **Regressions fail the gate.** `rlab eval gate` re-scores a config fully offline and exits non-zero when nDCG or faithfulness drops beyond tolerance, so it can block a merge or a deploy script.
 
 It runs entirely offline by default, using ONNX embeddings, an ONNX cross-encoder and a deterministic fake LLM. Clone it, seed it and gate it without an API key. Switch one env var to use Claude.
 
@@ -111,10 +110,10 @@ The trade-off is visible at a glance. Fusion gains about 5 nDCG points over the 
 <tr>
 <td valign="top">
 
-**CI quality gate**
+**Quality gate**
 - `rlab eval gate` re-scores a config and diffs the result against the checked-in baseline JSON.
 - **Exit 1** when nDCG@k or faithfulness drops beyond tolerance. **Exit 2** when the baseline came from a different environment (another embedder, reranker, LLM, judge, k or golden-set hash), because that diff would be meaningless.
-- Writes a markdown table to `$GITHUB_STEP_SUMMARY`.
+- `--report <file>` appends the verdict as a markdown table, ready to paste into a review.
 
 </td>
 <td valign="top">
@@ -143,7 +142,7 @@ The trade-off is visible at a glance. Fusion gains about 5 nDCG points over the 
 
 ![Run detail with retrieval and answer metrics, latency by stage and token cost](docs/screenshots/run-detail.png)
 
-**Compare.** Adding the reranker to RRF: +0.037 nDCG, question by question.
+**Compare.** Adding the reranker to RRF: +0.044 nDCG, question by question.
 
 ![Compare view of hybrid-rrf against hybrid-rerank with per-question nDCG changes](docs/screenshots/compare.png)
 
@@ -167,6 +166,15 @@ The trade-off is visible at a glance. Fusion gains about 5 nDCG points over the 
 
 ![Pipelines page with a versioned spec and quality across versions](docs/screenshots/pipelines.png)
 
+**On a phone.** The sidebar folds away and the tables scroll sideways inside their cards.
+
+<p>
+  <img src="docs/screenshots/overview-mobile.png" alt="Overview on a 390 px wide phone screen" width="300" />
+  <img src="docs/screenshots/playground-mobile.png" alt="Playground on a 390 px wide phone screen" width="300" />
+</p>
+
+All screenshots come from a fresh offline seed (`rlab seed` with the fake LLM). Their numbers can differ from the stored baselines above by a few thousandths, because ONNX scores vary slightly across CPU architectures.
+
 <details>
 <summary><b>Full overview page</b></summary>
 <br/>
@@ -183,7 +191,6 @@ flowchart TB
         direction LR
         UI["Next.js dashboard<br/>:3102"]
         CLI["rlab CLI<br/>(Typer)"]
-        GHA["GitHub Actions<br/>eval-gate.yml"]
     end
 
     subgraph API["FastAPI service :8102"]
@@ -223,7 +230,6 @@ flowchart TB
     FILES[["data/<br/>corpus · pipelines<br/>golden · baselines"]]
 
     UI -- "/api proxy + bearer" --> Routers
-    GHA --> CLI
     CLI --> RUN
     CLI --> LD
     Routers --> RW
@@ -287,14 +293,14 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    participant CI as GitHub Actions
+    participant S as Caller (shell, hook)
     participant C as rlab eval gate
     participant R as EvalRunner
     participant DB as Postgres
     participant J as Judge
     participant B as data/baselines
 
-    CI->>C: rlab eval gate --config hybrid-rerank
+    S->>C: rlab eval gate --config hybrid-rerank
     C->>B: read baseline JSON (k, environment, metrics)
     C->>R: run(config, mode=full, k=baseline.k)
     R->>R: index guard (embedder matches index)
@@ -308,11 +314,11 @@ sequenceDiagram
     R-->>C: RunSummary
     C->>C: compare(): drift check, then metric deltas
     alt environment or k differs
-        C-->>CI: exit 2 (not comparable)
+        C-->>S: exit 2 (not comparable)
     else nDCG or faithfulness dropped beyond tolerance
-        C-->>CI: exit 1 (regressed) + step summary table
+        C-->>S: exit 1 (regressed) + markdown report
     else
-        C-->>CI: exit 0 (passed)
+        C-->>S: exit 0 (passed)
     end
 ```
 
@@ -447,11 +453,11 @@ erDiagram
 | Embeddings and reranker | **fastembed** (ONNX): `BAAI/bge-small-en-v1.5`, `Xenova/ms-marco-MiniLM-L-6-v2` | CPU-friendly and deterministic. The runtime is pinned because scores feed the stored baselines. |
 | LLM | **Anthropic SDK** (Claude) or an offline `FakeLLM` | The same `LLMProvider` protocol serves generation, rewriting, synthesis and judging. |
 | CLI | **Typer** + Rich | `rlab ingest · configs · golden · eval run/gate/compare/baseline · judge calibrate · seed` |
-| Web | **Next.js 16** App Router, React 19, **TypeScript strict**, **shadcn/ui** (Radix), Tailwind 4 | Apple-style UI: SF-like type scale, system colours, generous whitespace, light and dark. |
+| Web | **Next.js 16** App Router, React 19, **TypeScript strict**, **shadcn/ui** (Radix), Tailwind 4 | A lab-notebook look: IBM Plex Sans and Mono, warm paper neutrals and one ink-teal accent, in light and dark. |
 | Data fetching | **TanStack Query** + **zod** | Every API response is validated at runtime against a zod schema. |
 | Charts | **Recharts** | Metric bars, a quality vs latency scatter, latency by stage, and quality over time. |
-| Quality | pytest (unit + Postgres integration), mypy `--strict`, Ruff, Vitest + RTL, ESLint, Playwright | All of it runs in CI. |
-| Delivery | Docker Compose, GitHub Actions (`ci.yml`, `eval-gate.yml`) | Ports are bound to `127.0.0.1`. The images run as a non-root user. |
+| Quality | pytest (unit + Postgres integration), mypy `--strict`, Ruff, Vitest + RTL, ESLint, Playwright | One `make` line runs all of it. |
+| Delivery | Docker Compose | Ports are bound to `127.0.0.1`. The images run as a non-root user. |
 
 ## Key engineering decisions
 
@@ -488,7 +494,7 @@ A config's identity is the SHA-256 of its canonical JSON spec. Registering an id
 <details>
 <summary><b>Offline by default, honest about it</b></summary>
 
-The fake LLM is deterministic. It extracts sentences for answers, judges claims lexically, and reports what the same tokens would cost on `RLAB_COST_REFERENCE_MODEL`. Offline faithfulness is therefore a *retrieval-coverage proxy*, not a measure of answer quality. This is stated in the dashboard, in the workflow file and [below](#what-the-numbers-mean). Set `RLAB_LLM_PROVIDER=anthropic` for real judgements. A truncated Claude reply is retried once with a larger token budget.
+The fake LLM is deterministic. It extracts sentences for answers, judges claims lexically, and reports what the same tokens would cost on `RLAB_COST_REFERENCE_MODEL`. Offline faithfulness is therefore a *retrieval-coverage proxy*, not a measure of answer quality. This is stated in the dashboard and [below](#what-the-numbers-mean). Set `RLAB_LLM_PROVIDER=anthropic` for real judgements. A truncated Claude reply is retried once with a larger token budget.
 </details>
 
 <details>
@@ -499,20 +505,33 @@ Eval questions run in an `asyncio.TaskGroup` behind a semaphore, so one failure 
 
 ## Quickstart
 
-### Prerequisites
+Everything runs offline by default. The only downloads are packages and, on the first seed, two small ONNX models (about 150 MB) that are cached afterwards.
 
-Python 3.12+ (3.13 works), Node 22+, pnpm 9, and either Homebrew `postgresql@17` (the script builds pgvector into a project-local copy) or Docker.
+### Docker Compose
+
+Needs only Docker.
+
+```bash
+docker compose up --build -d                    # postgres (pgvector/pgvector:pg16), api on :8102, web on :3102
+docker compose --profile tools run --rm seed    # migrate, index the corpus, load the golden set, run every config
+open http://127.0.0.1:3102
+docker compose down                             # add -v to drop the database and the model cache
+```
+
+`make docker-up` and `make docker-down` wrap the same commands. The seed job takes a few minutes on a laptop CPU, most of it in the cross-encoder runs.
 
 ### Local
 
+Python 3.12, Node 22, pnpm 9, and a Postgres with pgvector.
+
 ```bash
 make install   # backend/.venv (pip, constrained by backend/requirements.lock) + pnpm install
-make db        # project-local Postgres + pgvector on :5502, data in .local/ (no Docker)
+make db        # project-local Postgres 17 + pgvector on :5502, data in .local/ (macOS, Homebrew postgresql@17)
 make seed      # migrate, index the corpus, load golden set, run every config, write baselines
 make dev       # API on http://127.0.0.1:8102, dashboard on http://127.0.0.1:3102
 ```
 
-The first `make seed` downloads two small ONNX models (about 150 MB) into `.local/models`. After that, everything is offline.
+`make db` builds pgvector from its release tarball into `.local/`, without touching the Homebrew install. If you would rather not compile anything, run only the database from Compose (`docker compose up -d postgres`) and point the app at it with `RLAB_DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:5502/retrieval_lab`.
 
 ```bash
 backend/.venv/bin/rlab ask "Who presides when the President is tried for impeachment?"
@@ -520,19 +539,11 @@ backend/.venv/bin/rlab eval run --config hybrid-rrf --k 20
 make gate      # exit 0 pass · 1 regressed · 2 baseline from a different environment
 ```
 
-### Docker Compose
-
-```bash
-make docker-up         # postgres (pgvector:pg16), api, web, then the one-off seed job
-open http://127.0.0.1:3102
-make docker-down
-```
-
 ### Using Claude instead of the offline model
 
 ```bash
 export RLAB_LLM_PROVIDER=anthropic
-export ANTHROPIC_API_KEY=sk-ant-...
+export ANTHROPIC_API_KEY=...                # your own key
 backend/.venv/bin/rlab judge calibrate      # kappa of the real judge against the human labels
 backend/.venv/bin/rlab eval run --config hybrid-rerank
 ```
@@ -602,7 +613,7 @@ Pipelines live in [`data/pipelines/*.json`](data/pipelines) and are validated by
 
 - The run's `k` is the retrieval depth. An eval at k = 40 retrieves 40 chunks, and widens the hybrid candidate pools if needed.
 - **Offline faithfulness is a proxy.** With the fake LLM, the generator adds an unsupported sentence when its cited passage covers under half of the question's terms, and the fake judge detects that sentence lexically. Offline, faithfulness therefore tracks retrieval coverage, not answer quality.
-- **The gate is pinned to its runtime.** Baselines must be produced by the same runtime as the gate. The `eval-gate` workflow has a `regenerate` dispatch input that rebuilds every baseline on the CI runner and uploads them as an artifact.
+- **The gate is pinned to its runtime.** Baselines must be produced by the same runtime as the gate. After changing models or dependencies, run `rlab seed` (or `rlab eval baseline --config <name>`) on that runtime and commit the new files in `data/baselines/`.
 
 ## API overview
 
@@ -629,17 +640,101 @@ Interactive docs are at `http://127.0.0.1:8102/docs`. All routes are under `/api
 
 Errors use a single envelope, and every response carries an `x-request-id`.
 
+## Request and response examples
+
+Captured from the seeded offline stack. Long fields are trimmed with `…`.
+
+**Ask a question** with the default `hybrid-rerank` config:
+
+```bash
+curl -s http://127.0.0.1:8102/api/query \
+  -H 'content-type: application/json' \
+  -d '{"question": "Who presides when the President is tried for impeachment?", "config": "hybrid-rerank"}'
+```
+
+```json
+{
+  "config": { "name": "hybrid-rerank", "version": 2, "kind": "hybrid_rerank", "is_latest": true, "…": "…" },
+  "result": {
+    "answer": {
+      "text": "When the President of the United States is tried, the Chief Justice shall preside: And no Person shall be convicted without the Concurrence of two thirds of the Members present. [1] The Senate shall have the sole Power to try all Impeachments. [1]",
+      "citations": [
+        { "marker": 1, "chunk_id": "us-constitution:0006", "document_title": "The Constitution of the United States", "heading": "Article 1", "snippet": "The Vice-President of the United States shall be President of the Senate, …" }
+      ],
+      "abstained": false,
+      "top_evidence_score": 0.9994,
+      "model": "fake-extractive-v1"
+    },
+    "retrieval": {
+      "chunks": [
+        {
+          "chunk_id": "us-constitution:0006", "rank": 1, "char_start": 3443, "char_end": 4073,
+          "stage_scores": { "bm25": 15.81, "dense": 0.764, "rrf": 0.0328, "rerank": 0.9994 },
+          "stage_ranks": { "bm25": 1, "dense": 1, "rrf": 1, "rerank": 1 },
+          "…": "…"
+        }
+      ]
+    },
+    "timings_ms": { "bm25": 497.7, "embed": 503.4, "dense": 18.7, "fusion": 0.07, "rerank": 2361.4, "generate": 0.4, "total": 2892.3 },
+    "usage": { "generate": { "input_tokens": 1062, "output_tokens": 62, "cost_usd": 0.002744 } }
+  },
+  "total_cost_usd": 0.002744
+}
+```
+
+The cost is what those tokens would cost on `RLAB_COST_REFERENCE_MODEL`; the offline model itself is free.
+
+**An out-of-scope question** abstains before any model call:
+
+```json
+{
+  "text": "The best evidence found was too weak to answer reliably.",
+  "abstained": true,
+  "abstain_reason": "low_evidence",
+  "top_evidence_score": 0.00002,
+  "model": null
+}
+```
+
+**Compare two runs** (`GET /api/compare?baseline=<hybrid-rerank run>&candidate=<bm25 run>`), the same diff the gate makes:
+
+```json
+{
+  "gate": {
+    "passed": false,
+    "comparable": true,
+    "baseline_label": "hybrid-rerank@2 · 34cc5885",
+    "candidate_label": "bm25@1 · cb6784e2",
+    "tolerance": { "ndcg_at_k": 0.02, "faithfulness": 0.03 },
+    "deltas": [
+      { "metric": "ndcg_at_k", "baseline": 0.8902, "candidate": 0.8009, "delta": -0.0893, "tolerance": 0.02, "regressed": true },
+      { "metric": "faithfulness", "baseline": 0.9375, "candidate": 0.95, "delta": 0.0125, "tolerance": 0.03, "regressed": false },
+      "…"
+    ],
+    "drift": [{ "field": "spec_hash", "baseline": "7eae32fea567", "candidate": "5cd9fc34017b", "blocking": false }]
+  },
+  "questions": ["…per-question nDCG changes…"]
+}
+```
+
+`comparable` turns false when the models, `k` or the golden set differ; then `passed` says nothing and the CLI gate exits 2.
+
+**Errors** share one envelope:
+
+```json
+{ "error": { "code": "not_found", "message": "No pipeline config named 'nope'" } }
+```
+
 ## Testing
 
 ```bash
 make test lint typecheck build   # pytest + vitest · ruff + eslint · mypy --strict + tsc · next build
 cd web && pnpm e2e               # Playwright smoke tests against a running, seeded stack
-make gate                        # the CI quality gate, locally
+make gate                        # the quality gate
 ```
 
-- **Backend:** about 100 tests. Unit tests cover metrics, RRF, kappa, chunker, citations, baseline diff, evidence location, the fake LLM, and the Anthropic retry logic. Integration tests run against a real Postgres with pgvector and cover the pipeline, the eval runner (including a failing judge), the API (auth, 429, 409 and 422 paths), and CliRunner exit codes for the gate (0, 1 and 2).
-- **Web:** Vitest + React Testing Library for the API client, formatting, the playground, cited answers, the waterfall and the config dialog. Playwright for the flows end to end.
-- **CI:** [`ci.yml`](.github/workflows/ci.yml) runs Ruff, mypy, `alembic upgrade`, `check` and `downgrade`, pytest against a pgvector service container, and lint, typecheck, test and build for the web app. [`eval-gate.yml`](.github/workflows/eval-gate.yml) runs on PRs that touch the backend, migrations, dependencies or `data/`.
+- **Backend:** 110 tests. Unit tests cover metrics, RRF, kappa, chunker, citations, baseline diff, evidence location, the fake LLM, and the Anthropic retry logic. Integration tests run against a real Postgres with pgvector and cover the pipeline, the eval runner (including a failing judge), the API (auth, 429, 409 and 422 paths), and CliRunner exit codes for the gate (0, 1 and 2).
+- **Web:** 27 Vitest + React Testing Library tests for the API client, formatting, the playground, cited answers, the waterfall and the config dialog, plus 6 Playwright flows end to end.
 
 ## Project structure
 
@@ -673,7 +768,6 @@ retrieval-lab/
 │   ├── golden/               # seed.jsonl (62) + judge_calibration.jsonl (26)
 │   └── baselines/            # gate baselines, one per config
 ├── scripts/                  # local-pg.sh (Postgres + pgvector, no Docker), build_corpus.py
-├── .github/workflows/        # ci.yml, eval-gate.yml
 ├── docker-compose.yml
 └── Makefile
 ```
