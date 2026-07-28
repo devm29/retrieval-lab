@@ -74,9 +74,11 @@ async def list_runs(
 
 @router.post("/runs", status_code=status.HTTP_202_ACCEPTED)
 async def create_run(body: RunCreate, container: ContainerDep, scheduler: SchedulerDep) -> RunOut:
-    scheduler.ensure_capacity()
-    run = await container.runner.start(body.config, mode=body.mode, trigger="api", label=body.label, k=body.k)
-    scheduler.submit(run.id)
+    with scheduler.reserve():
+        run = await container.runner.start(
+            body.config, mode=body.mode, trigger="api", label=body.label, k=body.k
+        )
+        scheduler.submit(run.id)
     return run_out(run)
 
 

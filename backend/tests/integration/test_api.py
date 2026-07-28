@@ -204,3 +204,17 @@ async def test_concurrent_runs_are_capped(settings: Settings, container: Contain
             if (await http.get(f"/runs/{run_id}")).json()["status"] in {"completed", "failed"}:
                 break
             await asyncio.sleep(0.05)
+
+
+async def test_simultaneous_run_requests_respect_the_cap(settings: Settings, container: Container) -> None:
+    capped = settings.model_copy(update={"max_active_runs": 1})
+    async with _client(capped, container) as http:
+        responses = await asyncio.gather(
+            *(http.post("/runs", json={"config": "bm25", "mode": "retrieval"}) for _ in range(3))
+        )
+        assert sorted(r.status_code for r in responses) == [202, 429, 429]
+        run_id = next(r.json()["id"] for r in responses if r.status_code == 202)
+        for _ in range(200):
+            if (await http.get(f"/runs/{run_id}")).json()["status"] in {"completed", "failed"}:
+                break
+            await asyncio.sleep(0.05)

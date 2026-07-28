@@ -3,7 +3,8 @@ from __future__ import annotations
 import asyncio
 import secrets
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Iterator
+from contextlib import contextmanager
 from typing import Annotated
 
 from fastapi import Depends, Query, Request
@@ -24,12 +25,23 @@ class RunScheduler:
         self._container = container
         self._max_active = max_active
         self._tasks: dict[uuid.UUID, asyncio.Task[object]] = {}
+        self._reserved = 0
 
-    def ensure_capacity(self) -> None:
-        if len(self._tasks) >= self._max_active:
-            raise TooManyRunsError(
-                f"{len(self._tasks)} eval runs are already in progress; wait for one to finish"
-            )
+    @contextmanager
+    def reserve(self) -> Iterator[None]:
+        """Hold a slot while a run is being created, so concurrent requests cannot overshoot the cap.
+
+        Creating the run awaits the database, and a plain capacity check before that await would
+        let every request that arrives in the meantime through.
+        """
+        in_use = len(self._tasks) + self._reserved
+        if in_use >= self._max_active:
+            raise TooManyRunsError(f"{in_use} eval runs are already in progress; wait for one to finish")
+        self._reserved += 1
+        try:
+            yield
+        finally:
+            self._reserved -= 1
 
     def submit(self, run_id: uuid.UUID) -> None:
         task: asyncio.Task[object] = asyncio.create_task(self._container.runner.execute(run_id))
