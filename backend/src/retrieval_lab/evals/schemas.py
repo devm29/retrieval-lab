@@ -148,7 +148,7 @@ class GateResult(BaseModel):
 
 
 class BaselineFile(BaseModel):
-    """A stored baseline, checked into data/baselines so CI can gate without a database history."""
+    """A stored baseline, checked into data/baselines so the gate works without a database history."""
 
     config_name: str
     spec_hash: str

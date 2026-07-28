@@ -275,7 +275,7 @@ def eval_baseline(
     ] = None,
     directory: Annotated[Path | None, typer.Option(help="Where baseline JSON files live.")] = None,
 ) -> None:
-    """Promote a run to baseline in the database and write the baseline file used by CI."""
+    """Promote a run to baseline in the database and write the baseline file the gate reads."""
 
     async def work(c: Container) -> None:
         if run_id is None:

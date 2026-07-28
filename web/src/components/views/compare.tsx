@@ -38,7 +38,7 @@ export function CompareView() {
   };
 
   return (
-    <Page title="Compare" subtitle="Diff two runs metric by metric and question by question, exactly as the CI gate does.">
+    <Page title="Compare" subtitle="Diff two runs metric by metric and question by question, exactly as the quality gate does.">
       <div className="mb-8 grid items-end gap-4 rounded-xl bg-card p-5 shadow-xs ring-1 ring-border/70 md:grid-cols-[1fr_auto_1fr]">
         <RunPicker id="baseline" label="Baseline" runs={completed} value={baselineId} onChange={(v) => setParam("baseline", v)} />
         <ArrowRight className="mb-2.5 hidden size-4 text-muted-foreground md:block" aria-hidden />
