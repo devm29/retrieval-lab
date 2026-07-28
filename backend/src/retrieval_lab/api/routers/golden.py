@@ -81,10 +81,16 @@ async def create_golden(body: GoldenCreate, container: ContainerDep) -> GoldenOu
 @router.patch("/{question_id}")
 async def update_golden(question_id: uuid.UUID, body: GoldenUpdate, container: ContainerDep) -> GoldenOut:
     changes = body.model_dump(exclude_unset=True)
+    if "question" in changes:
+        changes["question"] = changes["question"].strip()
     async with transaction(container.sessions) as session:
         row = await GoldenRepository(session).get(question_id)
         for field, value in changes.items():
             setattr(row, field, value)
+        if not row.answerable:
+            # Same shape as a question created unanswerable: no evidence to locate or hash.
+            row.document_slug = None
+            row.evidence = None
         if {"evidence", "document_slug", "answerable"} & changes.keys() or (
             changes.get("status") is GoldenStatus.ACCEPTED
         ):

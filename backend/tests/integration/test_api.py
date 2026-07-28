@@ -98,6 +98,27 @@ async def test_golden_evidence_is_validated(client: httpx.AsyncClient) -> None:
     assert rejected.json()["reviewed_at"] is not None
 
 
+async def test_marking_a_question_unanswerable_drops_its_evidence(client: httpx.AsyncClient) -> None:
+    created = await client.post(
+        "/golden",
+        json={
+            "question": "How many sides does a Square have in Flatland?",
+            "document_slug": "flatland",
+            "evidence": "Our Women are Straight Lines.",
+        },
+    )
+    assert created.status_code == 201
+    patched = await client.patch(
+        f"/golden/{created.json()['id']}", json={"answerable": False, "question": "  Out of scope now?  "}
+    )
+    assert patched.status_code == 200
+    body = patched.json()
+    assert body["answerable"] is False
+    assert body["document_slug"] is None and body["evidence"] is None
+    assert body["question"] == "Out of scope now?"
+    await client.patch(f"/golden/{body['id']}", json={"status": "rejected"})
+
+
 async def test_synthesize_fills_the_review_queue(client: httpx.AsyncClient) -> None:
     response = await client.post("/golden/synthesize", json={"count": 3})
     assert response.status_code == 201
