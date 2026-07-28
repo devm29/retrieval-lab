@@ -74,6 +74,12 @@ class ConfigRepository:
             raise NotFoundError(f"No pipeline config named '{name}'")
         return row
 
+    async def is_latest(self, row: PipelineConfigRow) -> bool:
+        newest = await self._session.scalar(
+            select(func.max(PipelineConfigRow.version)).where(PipelineConfigRow.name == row.name)
+        )
+        return newest == row.version
+
     async def resolve(self, ref: str) -> PipelineConfigRow:
         """Accept a UUID, a name (latest version) or name@version."""
         try:

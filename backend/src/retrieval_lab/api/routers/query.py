@@ -15,7 +15,13 @@ async def query(body: QueryIn, container: ContainerDep) -> QueryOut:
     # The config lookup gets its own short session so no connection sits idle in a
     # transaction through embedding, reranking and the LLM call.
     async with container.sessions() as session:
-        row = await ConfigRepository(session).resolve(body.config)
+        configs = ConfigRepository(session)
+        row = await configs.resolve(body.config)
+        latest = await configs.is_latest(row)
     await container.index_guard.check()
     result = await container.answers.answer(body.question.strip(), container.pipeline(spec_of(row)))
-    return QueryOut(config=config_out(row), result=result, total_cost_usd=round(result.total_cost_usd, 6))
+    return QueryOut(
+        config=config_out(row, is_latest=latest),
+        result=result,
+        total_cost_usd=round(result.total_cost_usd, 6),
+    )

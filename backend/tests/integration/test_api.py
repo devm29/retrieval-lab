@@ -47,6 +47,7 @@ async def test_query_returns_answer_with_citations(client: httpx.AsyncClient) ->
     assert response.status_code == 200
     body = response.json()
     assert body["config"]["name"] == "hybrid-rerank"
+    assert body["config"]["is_latest"] is True
     assert body["result"]["answer"]["citations"]
     assert body["result"]["timings_ms"]["total"] > 0
 
@@ -71,6 +72,11 @@ async def test_new_spec_creates_a_new_version(client: httpx.AsyncClient) -> None
     assert first.status_code == 201 and again.status_code == 200
     assert again.json()["config"]["version"] == 1
     assert changed.json()["config"]["version"] == 2
+    assert again.json()["config"]["is_latest"] is True
+    stale = await client.post("/configs", json={"name": "api-hybrid", "spec": spec})
+    assert stale.json()["config"]["version"] == 1 and stale.json()["config"]["is_latest"] is False
+    assert (await client.get("/configs/api-hybrid")).json()["is_latest"] is True
+    assert (await client.get("/configs/api-hybrid@1")).json()["is_latest"] is False
 
 
 async def test_golden_evidence_is_validated(client: httpx.AsyncClient) -> None:

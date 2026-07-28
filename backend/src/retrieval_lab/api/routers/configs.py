@@ -27,15 +27,20 @@ async def list_configs(session: SessionDep) -> list[ConfigOut]:
 async def create_config(body: ConfigCreate, container: ContainerDep, response: Response) -> ConfigCreated:
     config = PipelineConfig(name=body.name, description=body.description, spec=body.spec)
     async with transaction(container.sessions) as session:
-        row, created = await ConfigRepository(session).register(config)
+        configs = ConfigRepository(session)
+        row, created = await configs.register(config)
+        # Re-registering an older spec returns that older version, which is not the latest.
+        latest = created or await configs.is_latest(row)
     if not created:
         response.status_code = status.HTTP_200_OK
-    return ConfigCreated(config=config_out(row, is_latest=True), created=created)
+    return ConfigCreated(config=config_out(row, is_latest=latest), created=created)
 
 
 @router.get("/{ref}")
 async def get_config(ref: str, session: SessionDep) -> ConfigOut:
-    return config_out(await ConfigRepository(session).resolve(ref))
+    configs = ConfigRepository(session)
+    row = await configs.resolve(ref)
+    return config_out(row, is_latest=await configs.is_latest(row))
 
 
 @router.get("/{name}/history")
