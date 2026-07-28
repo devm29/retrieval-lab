@@ -17,7 +17,7 @@ COPY backend/ ./
 COPY data/ /app/data/
 RUN pip install --no-deps -e . \
     && useradd --create-home --uid 10001 rlab \
-    && mkdir -p /app/.local/models && chown -R rlab /app/.local
+    && mkdir -p /app/.local/models && chown -R rlab /app/.local /app/data/baselines
 
 USER rlab
 EXPOSE 8102
