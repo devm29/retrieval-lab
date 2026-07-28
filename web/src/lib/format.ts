@@ -1,4 +1,4 @@
-import { type LeaderboardRow, type MetricKey, type RewriteTarget, specViewSchema } from "./api/schemas";
+import { type GateResult, type LeaderboardRow, type MetricKey, type RewriteTarget, specViewSchema } from "./api/schemas";
 
 export interface MetricInfo {
   label: string;
@@ -161,4 +161,22 @@ export function rewriteLabel(target: RewriteTarget): string {
     case "both":
       return "BM25 and dense searched for";
   }
+}
+
+const DRIFT_LABELS: Record<string, string> = {
+  golden_hash: "The golden set",
+  embedding_model: "The embedding model",
+  reranker_model: "The reranker",
+  llm_model: "The generator",
+  judge_model: "The judge",
+  k: "The cut-off k",
+  environment: "The recorded environment",
+};
+
+/** The blocking differences between two runs as a sentence subject, or null when they are comparable. */
+export function blockingDrift(gate: Pick<GateResult, "drift">): string | null {
+  const blocking = gate.drift.filter((d) => d.blocking);
+  if (blocking.length === 0) return null;
+  const labels = blocking.map((d) => DRIFT_LABELS[d.field] ?? d.field);
+  return labels.map((label, i) => (i === 0 ? label : label.charAt(0).toLowerCase() + label.slice(1))).join(", ");
 }

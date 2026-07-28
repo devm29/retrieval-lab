@@ -18,7 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { GateResult, MetricKey, Run, RunSummary } from "@/lib/api/schemas";
 import { type ResultSort, usePromoteBaseline, useRun, useRunGate, useRunResults } from "@/lib/api/queries";
-import { GENERATION_METRICS, METRICS, RETRIEVAL_METRICS, STAGE_LABELS, ago, configLabel, ms, percent, score, signed, usd } from "@/lib/format";
+import { GENERATION_METRICS, METRICS, RETRIEVAL_METRICS, STAGE_LABELS, ago, blockingDrift, configLabel, ms, percent, score, signed, usd } from "@/lib/format";
 
 export function RunDetailView({ runId }: { runId: string }) {
   const run = useRun(runId);
@@ -169,27 +169,17 @@ function MetricGrid({ summary, gate }: { summary: RunSummary; gate: GateResult |
   );
 }
 
-const DRIFT_LABELS: Record<string, string> = {
-  golden_hash: "The golden set",
-  embedding_model: "The embedding model",
-  reranker_model: "The reranker",
-  llm_model: "The generator",
-  judge_model: "The judge",
-  k: "The cut-off k",
-  environment: "The recorded environment",
-};
-
 function GateCard({ gate }: { gate: GateResult }) {
   const gated = gate.deltas.filter((d) => d.tolerance !== null);
-  const blocking = gate.drift.filter((d) => d.blocking);
-  if (blocking.length > 0) {
+  const changed = blockingDrift(gate);
+  if (changed) {
     return (
       <div className="flex flex-wrap items-center gap-4 rounded-xl bg-warning/10 p-4 ring-1 ring-warning/30" role="status">
         <ShieldAlert className="size-6 text-warning" strokeWidth={1.75} aria-hidden />
         <div className="min-w-0 flex-1">
           <p className="text-[15px] font-semibold">Not comparable with the baseline</p>
           <p className="text-[13px] text-muted-foreground">
-            {blocking.map((d) => DRIFT_LABELS[d.field] ?? d.field).join(", ")} changed since {gate.baseline_label}, so a
+            {changed} changed since {gate.baseline_label}, so a
             metric diff would not mean anything. Promote a fresh baseline to gate again.
           </p>
         </div>
@@ -208,7 +198,7 @@ function GateCard({ gate }: { gate: GateResult }) {
       )}
       <div className="min-w-0 flex-1">
         <p className="text-[15px] font-semibold">
-          {gate.passed ? "Quality gate passes against the baseline" : "This run would fail the CI quality gate"}
+          {gate.passed ? "Quality gate passes against the baseline" : "This run would fail the quality gate"}
         </p>
         <p className="text-[13px] text-muted-foreground">Compared with {gate.baseline_label}</p>
       </div>

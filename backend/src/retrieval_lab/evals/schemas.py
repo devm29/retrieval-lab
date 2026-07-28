@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 from retrieval_lab.generation.citations import Citation
 from retrieval_lab.llm.base import ClaimVerdict, TokenUsage
@@ -140,6 +140,8 @@ class GateResult(BaseModel):
     deltas: list[MetricDelta]
     drift: list[DriftItem] = Field(default_factory=list)
 
+    # Serialised so API clients see that `passed` means nothing when the runs are not comparable.
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def comparable(self) -> bool:
         return not any(d.blocking for d in self.drift)

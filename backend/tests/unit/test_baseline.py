@@ -76,6 +76,7 @@ def test_changed_golden_set_or_embedder_is_blocking_drift() -> None:
     after = BASE.model_copy(update={"environment": _env(golden_hash="b" * 64, embedding_model="hashing-384")})
     result = compare(before, after, GateTolerance(), config_name="c")
     assert result.passed and not result.comparable
+    assert result.model_dump(mode="json")["comparable"] is False
     assert {d.field for d in result.drift if d.blocking} == {"golden_hash", "embedding_model"}
 
 

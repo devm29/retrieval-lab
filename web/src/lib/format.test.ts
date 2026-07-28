@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ago, baselineStatus, ms, percent, rewriteLabel, score, signed, specView, usd } from "./format";
+import { ago, baselineStatus, blockingDrift, ms, percent, rewriteLabel, score, signed, specView, usd } from "./format";
 
 describe("format", () => {
   it("renders missing values as an em dash", () => {
@@ -65,5 +65,17 @@ describe("specView", () => {
     });
     expect(specView({ kind: "bm25" })).toEqual({ maxContextChunks: 5, rewriteAppliesTo: null });
     expect(rewriteLabel("dense")).toBe("Dense search embedded");
+  });
+});
+
+describe("blockingDrift", () => {
+  it("names only the blocking differences", () => {
+    const drift = [
+      { field: "k", baseline: "10", candidate: "20", blocking: true },
+      { field: "spec_hash", baseline: "a", candidate: "b", blocking: false },
+      { field: "embedding_model", baseline: "x", candidate: "y", blocking: true },
+    ];
+    expect(blockingDrift({ drift })).toBe("The cut-off k, the embedding model");
+    expect(blockingDrift({ drift: drift.filter((d) => !d.blocking) })).toBeNull();
   });
 });

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { CompareResult, MetricKey, Run } from "@/lib/api/schemas";
 import { useCompare, useRuns } from "@/lib/api/queries";
-import { METRICS, ago, configLabel, score, shortId, signed } from "@/lib/format";
+import { METRICS, ago, blockingDrift, configLabel, score, shortId, signed } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 function pickBaseline(runs: Run[], candidate: Run | undefined): string | null {
@@ -96,6 +96,44 @@ function RunPicker({
   );
 }
 
+function GateVerdict({ gate }: { gate: CompareResult["gate"] }) {
+  const drift = blockingDrift(gate);
+  if (drift) {
+    return (
+      <div role="status" className="flex items-center gap-3 rounded-xl bg-warning/10 p-4 ring-1 ring-warning/30">
+        <ShieldAlert className="size-6 shrink-0 text-warning" strokeWidth={1.75} aria-hidden />
+        <div>
+          <p className="text-[15px] font-semibold">These runs are not comparable</p>
+          <p className="text-[13px] text-muted-foreground">
+            {drift} changed between the two runs, so the gate would refuse this diff rather than pass or fail it.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div
+      role="status"
+      className={cn(
+        "flex items-center gap-3 rounded-xl p-4 ring-1",
+        gate.passed ? "bg-success/8 ring-success/25" : "bg-destructive/8 ring-destructive/25",
+      )}
+    >
+      {gate.passed ? (
+        <ShieldCheck className="size-6 shrink-0 text-success" strokeWidth={1.75} aria-hidden />
+      ) : (
+        <ShieldAlert className="size-6 shrink-0 text-destructive" strokeWidth={1.75} aria-hidden />
+      )}
+      <div>
+        <p className="text-[15px] font-semibold">{gate.passed ? "The candidate would pass the gate" : "The candidate would fail the gate"}</p>
+        <p className="text-[13px] text-muted-foreground">
+          Tolerance: nDCG −{gate.tolerance.ndcg_at_k}, faithfulness −{gate.tolerance.faithfulness} (absolute)
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function Comparison({ data }: { data: CompareResult }) {
   const { gate } = data;
   const maxDelta = Math.max(0.05, ...data.questions.map((q) => Math.abs(q.delta ?? 0)));
@@ -103,25 +141,7 @@ function Comparison({ data }: { data: CompareResult }) {
 
   return (
     <div className="space-y-10">
-      <div
-        role="status"
-        className={cn(
-          "flex items-center gap-3 rounded-xl p-4 ring-1",
-          gate.passed ? "bg-success/8 ring-success/25" : "bg-destructive/8 ring-destructive/25",
-        )}
-      >
-        {gate.passed ? (
-          <ShieldCheck className="size-6 text-success" strokeWidth={1.75} aria-hidden />
-        ) : (
-          <ShieldAlert className="size-6 text-destructive" strokeWidth={1.75} aria-hidden />
-        )}
-        <div>
-          <p className="text-[15px] font-semibold">{gate.passed ? "The candidate would pass the gate" : "The candidate would fail the gate"}</p>
-          <p className="text-[13px] text-muted-foreground">
-            Tolerance: nDCG −{gate.tolerance.ndcg_at_k}, faithfulness −{gate.tolerance.faithfulness} (absolute)
-          </p>
-        </div>
-      </div>
+      <GateVerdict gate={gate} />
 
       <Section title="Metrics">
         <div className="overflow-x-auto rounded-xl bg-card shadow-xs ring-1 ring-border/70">
