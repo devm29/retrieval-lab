@@ -1,0 +1,10 @@
+{
+  "name": "dense",
+  "description": "BGE-small embeddings with a pgvector HNSW index, cosine distance.",
+  "spec": {
+    "kind": "dense",
+    "top_k": 10,
+    "ef_search": 80,
+    "generation": { "max_context_chunks": 5, "abstain_below": 0.66 }
+  }
+}

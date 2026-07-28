@@ -1,0 +1,9 @@
+.local
+**/__pycache__
+**/.venv
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache
+web/node_modules
+web/.next
+docs

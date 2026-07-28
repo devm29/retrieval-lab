@@ -1,0 +1,9 @@
+{
+  "name": "bm25",
+  "description": "Postgres full-text search only. The lexical baseline every other config has to beat.",
+  "spec": {
+    "kind": "bm25",
+    "top_k": 10,
+    "generation": { "max_context_chunks": 5, "abstain_below": 0.3 }
+  }
+}

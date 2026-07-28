@@ -1,0 +1,41 @@
+# Local Postgres, model cache and scratch data
+.local/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Node / Next.js (see also web/.gitignore)
+node_modules/
+.next/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+
+# Local virtualenv left over from development (kept on disk, never committed)
+project_venv/
+
+# Build output, coverage, logs and scratch
+dist/
+build/
+coverage/
+*.log
+tmp/
+
+# Not part of this repository
+.github/

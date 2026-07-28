@@ -1,0 +1,74 @@
+{
+  "config_name": "dense",
+  "spec_hash": "af768e52ac76770d4cada7562536f73434a384faeac5d4ebb02fa4d4fadf2046",
+  "created_at": "2026-10-05T09:18:11.135502Z",
+  "llm_model": "fake-extractive-v1",
+  "judge_model": "fake-judge-v1",
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "summary": {
+    "k": 10,
+    "mode": "full",
+    "environment": {
+      "llm_model": "fake-extractive-v1",
+      "judge_model": "fake-judge-v1",
+      "embedding_model": "BAAI/bge-small-en-v1.5",
+      "reranker_model": "Xenova/ms-marco-MiniLM-L-6-v2",
+      "golden_hash": "6ccae5d3150b9d3e8a24b10607a05c4148c132b90b7c4083e79aee51694dbc3a"
+    },
+    "question_count": 62,
+    "answerable_count": 56,
+    "unanswerable_count": 6,
+    "metrics": {
+      "recall_at_k": 0.8929,
+      "mrr": 0.7489,
+      "ndcg_at_k": 0.7834,
+      "context_precision": 0.7097,
+      "faithfulness": 0.9326,
+      "answer_relevance": 0.712,
+      "citation_accuracy": 0.6848,
+      "abstention_accuracy": 0.8333,
+      "false_abstention_rate": 0.1786
+    },
+    "latency_ms": {
+      "dense": {
+        "p50": 9.41,
+        "p95": 16.88,
+        "mean": 10.01
+      },
+      "embed": {
+        "p50": 4.91,
+        "p95": 10.59,
+        "mean": 5.56
+      },
+      "generate": {
+        "p50": 0.36,
+        "p95": 0.65,
+        "mean": 0.41
+      },
+      "retrieval": {
+        "p50": 14.79,
+        "p95": 24.3,
+        "mean": 15.63
+      },
+      "total": {
+        "p50": 20.24,
+        "p95": 33.69,
+        "mean": 22.15
+      }
+    },
+    "cost": {
+      "generate": {
+        "input_tokens": 71461,
+        "output_tokens": 3345,
+        "cost_usd": 0.176372
+      },
+      "judge": {
+        "input_tokens": 183531,
+        "output_tokens": 5749,
+        "cost_usd": 0.424552
+      }
+    },
+    "total_cost_usd": 0.600924,
+    "cost_per_query_usd": 0.009692
+  }
+}

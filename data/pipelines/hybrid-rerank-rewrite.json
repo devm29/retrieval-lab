@@ -1,0 +1,14 @@
+{
+  "name": "hybrid-rerank-rewrite",
+  "description": "Hybrid rerank where an LLM keyword rewrite replaces the question for BM25, dense retrieval and the cross-encoder.",
+  "spec": {
+    "kind": "hybrid_rerank",
+    "top_k": 10,
+    "bm25_k": 50,
+    "dense_k": 50,
+    "rrf_k": 60,
+    "rerank_candidates": 30,
+    "query_rewrite": { "apply_to": "both", "rerank_query": "rewritten" },
+    "generation": { "max_context_chunks": 5, "abstain_below": 0.2 }
+  }
+}

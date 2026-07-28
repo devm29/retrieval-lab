@@ -1,0 +1,99 @@
+{
+  "config_name": "hybrid-rerank-rewrite",
+  "spec_hash": "700f84d0f1adcbc92a46d0466abacb1425aacd81114765b0176e95b7937a2287",
+  "created_at": "2026-10-05T09:18:11.136889Z",
+  "llm_model": "fake-extractive-v1",
+  "judge_model": "fake-judge-v1",
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "summary": {
+    "k": 10,
+    "mode": "full",
+    "environment": {
+      "llm_model": "fake-extractive-v1",
+      "judge_model": "fake-judge-v1",
+      "embedding_model": "BAAI/bge-small-en-v1.5",
+      "reranker_model": "Xenova/ms-marco-MiniLM-L-6-v2",
+      "golden_hash": "6ccae5d3150b9d3e8a24b10607a05c4148c132b90b7c4083e79aee51694dbc3a"
+    },
+    "question_count": 62,
+    "answerable_count": 56,
+    "unanswerable_count": 6,
+    "metrics": {
+      "recall_at_k": 0.9643,
+      "mrr": 0.8743,
+      "ndcg_at_k": 0.897,
+      "context_precision": 0.8397,
+      "faithfulness": 0.9556,
+      "answer_relevance": 0.7444,
+      "citation_accuracy": 0.7556,
+      "abstention_accuracy": 1.0,
+      "false_abstention_rate": 0.1964
+    },
+    "latency_ms": {
+      "bm25": {
+        "p50": 45.94,
+        "p95": 93.31,
+        "mean": 49.31
+      },
+      "dense": {
+        "p50": 20.35,
+        "p95": 34.11,
+        "mean": 20.76
+      },
+      "embed": {
+        "p50": 14.51,
+        "p95": 28.48,
+        "mean": 15.99
+      },
+      "fusion": {
+        "p50": 0.1,
+        "p95": 0.16,
+        "mean": 0.1
+      },
+      "generate": {
+        "p50": 0.45,
+        "p95": 0.87,
+        "mean": 0.55
+      },
+      "rerank": {
+        "p50": 464.0,
+        "p95": 608.99,
+        "mean": 474.02
+      },
+      "retrieval": {
+        "p50": 530.85,
+        "p95": 663.33,
+        "mean": 532.77
+      },
+      "rewrite": {
+        "p50": 0.06,
+        "p95": 0.13,
+        "mean": 0.07
+      },
+      "total": {
+        "p50": 533.81,
+        "p95": 666.85,
+        "mean": 538.57
+      }
+    },
+    "cost": {
+      "generate": {
+        "input_tokens": 65282,
+        "output_tokens": 3329,
+        "cost_usd": 0.163854
+      },
+      "judge": {
+        "input_tokens": 182642,
+        "output_tokens": 5677,
+        "cost_usd": 0.422054
+      },
+      "rewrite": {
+        "input_tokens": 4860,
+        "output_tokens": 608,
+        "cost_usd": 0.0158
+      }
+    },
+    "total_cost_usd": 0.601708,
+    "cost_per_query_usd": 0.009705
+  }
+}

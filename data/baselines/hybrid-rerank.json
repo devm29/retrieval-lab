@@ -1,0 +1,89 @@
+{
+  "config_name": "hybrid-rerank",
+  "spec_hash": "7eae32fea5675cad1ff8047974b7ace181859f462b13f1832fc33cad99920746",
+  "created_at": "2026-10-05T09:18:11.138139Z",
+  "llm_model": "fake-extractive-v1",
+  "judge_model": "fake-judge-v1",
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "summary": {
+    "k": 10,
+    "mode": "full",
+    "environment": {
+      "llm_model": "fake-extractive-v1",
+      "judge_model": "fake-judge-v1",
+      "embedding_model": "BAAI/bge-small-en-v1.5",
+      "reranker_model": "Xenova/ms-marco-MiniLM-L-6-v2",
+      "golden_hash": "6ccae5d3150b9d3e8a24b10607a05c4148c132b90b7c4083e79aee51694dbc3a"
+    },
+    "question_count": 62,
+    "answerable_count": 56,
+    "unanswerable_count": 6,
+    "metrics": {
+      "recall_at_k": 0.9643,
+      "mrr": 0.8651,
+      "ndcg_at_k": 0.8902,
+      "context_precision": 0.8042,
+      "faithfulness": 0.9375,
+      "answer_relevance": 0.75,
+      "citation_accuracy": 0.7188,
+      "abstention_accuracy": 1.0,
+      "false_abstention_rate": 0.1429
+    },
+    "latency_ms": {
+      "bm25": {
+        "p50": 49.95,
+        "p95": 92.52,
+        "mean": 52.39
+      },
+      "dense": {
+        "p50": 19.41,
+        "p95": 28.24,
+        "mean": 19.68
+      },
+      "embed": {
+        "p50": 16.91,
+        "p95": 32.24,
+        "mean": 17.54
+      },
+      "fusion": {
+        "p50": 0.07,
+        "p95": 0.13,
+        "mean": 0.08
+      },
+      "generate": {
+        "p50": 0.42,
+        "p95": 0.82,
+        "mean": 0.49
+      },
+      "rerank": {
+        "p50": 463.11,
+        "p95": 631.7,
+        "mean": 479.68
+      },
+      "retrieval": {
+        "p50": 528.74,
+        "p95": 728.2,
+        "mean": 540.31
+      },
+      "total": {
+        "p50": 532.46,
+        "p95": 731.13,
+        "mean": 544.87
+      }
+    },
+    "cost": {
+      "generate": {
+        "input_tokens": 68877,
+        "output_tokens": 3423,
+        "cost_usd": 0.171984
+      },
+      "judge": {
+        "input_tokens": 185906,
+        "output_tokens": 5882,
+        "cost_usd": 0.430632
+      }
+    },
+    "total_cost_usd": 0.602616,
+    "cost_per_query_usd": 0.00972
+  }
+}

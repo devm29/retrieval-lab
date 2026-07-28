@@ -1,0 +1,70 @@
+name: retrieval-lab
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: retrieval_lab
+    ports:
+      - "127.0.0.1:5502:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d retrieval_lab"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      RLAB_DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/retrieval_lab
+      RLAB_LLM_PROVIDER: ${RLAB_LLM_PROVIDER:-fake}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      RLAB_CORS_ORIGINS: '["http://localhost:3102","http://127.0.0.1:3102"]'
+      RLAB_API_TOKEN: ${RLAB_API_TOKEN:-}
+      RLAB_LOG_JSON: "true"
+    ports:
+      - "127.0.0.1:8102:8102"
+    volumes:
+      - models:/app/.local/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  seed:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    profiles: ["tools"]
+    command: ["sh", "-c", "rlab db upgrade && rlab seed"]
+    environment:
+      RLAB_DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/retrieval_lab
+      RLAB_LLM_PROVIDER: ${RLAB_LLM_PROVIDER:-fake}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    volumes:
+      - models:/app/.local/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: web
+      args:
+        RLAB_API_URL: http://api:8102
+    environment:
+      RLAB_API_URL: http://api:8102
+      RLAB_API_TOKEN: ${RLAB_API_TOKEN:-}
+    ports:
+      - "127.0.0.1:3102:3102"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  models:
