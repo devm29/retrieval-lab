@@ -733,7 +733,7 @@ cd web && pnpm e2e               # Playwright smoke tests against a running, see
 make gate                        # the quality gate
 ```
 
-- **Backend:** 110 tests. Unit tests cover metrics, RRF, kappa, chunker, citations, baseline diff, evidence location, the fake LLM, and the Anthropic retry logic. Integration tests run against a real Postgres with pgvector and cover the pipeline, the eval runner (including a failing judge), the API (auth, 429, 409 and 422 paths), and CliRunner exit codes for the gate (0, 1 and 2).
+- **Backend:** 113 tests. Unit tests cover metrics, RRF, kappa, chunker, citations, baseline diff, evidence location, the fake LLM, and the Anthropic retry logic. Integration tests run against a real Postgres with pgvector and cover the pipeline, the eval runner (including a failing judge), the API (auth, 429, 409 and 422 paths), and CliRunner exit codes for the gate (0, 1 and 2).
 - **Web:** 27 Vitest + React Testing Library tests for the API client, formatting, the playground, cited answers, the waterfall and the config dialog, plus 6 Playwright flows end to end.
 
 ## Project structure
