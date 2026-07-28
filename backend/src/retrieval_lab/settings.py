@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, PostgresDsn, SecretStr, computed_field, model_validator
+from pydantic import Field, PostgresDsn, SecretStr, computed_field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -53,6 +53,13 @@ class Settings(BaseSettings):
     chunk_overlap: int = Field(default=150, ge=0)
 
     eval_concurrency: int = Field(default=4, ge=1, le=32)
+
+    @field_validator("api_token", "anthropic_api_key", mode="before")
+    @classmethod
+    def _blank_secret_is_unset(cls, value: object) -> object:
+        # `RLAB_API_TOKEN=` in .env or `${RLAB_API_TOKEN:-}` in Compose means "not set". Read as an
+        # empty token it would switch auth on with a password nobody can send.
+        return None if isinstance(value, str) and not value.strip() else value
 
     @model_validator(mode="after")
     def _check_overlap(self) -> Settings:
