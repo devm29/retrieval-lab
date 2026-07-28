@@ -40,7 +40,7 @@ export function ErrorState({
         <p className="font-medium">{title}</p>
         <p className="text-muted-foreground">{message}</p>
         {onRetry ? (
-          <button type="button" onClick={onRetry} className="text-primary hover:underline">
+          <button type="button" onClick={onRetry} className="rounded-sm text-primary outline-none hover:underline focus-visible:ring-4 focus-visible:ring-ring">
             Try again
           </button>
         ) : null}

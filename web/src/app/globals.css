@@ -4,43 +4,43 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Apple system neutrals with systemBlue as the single accent. Chart slots are ordered
-   blue, orange, indigo, teal, green so adjacent series stay distinguishable under CVD;
-   the dark steps are re-tuned for the dark surface rather than flipped. */
+/* Lab-notebook palette: warm paper neutrals with one ink-teal accent. Chart slots run teal,
+   orange, indigo, rose, green so adjacent series stay apart under the common colour-vision
+   deficiencies; dark steps are re-tuned for the dark surface rather than flipped. */
 :root {
   --radius: 0.75rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.232 0.004 286.1);
-  --canvas: oklch(0.971 0.003 286.4);
+  --background: oklch(0.995 0.002 85);
+  --foreground: oklch(0.24 0.012 230);
+  --canvas: oklch(0.968 0.007 85);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.232 0.004 286.1);
+  --card-foreground: oklch(0.24 0.012 230);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.232 0.004 286.1);
-  --primary: oklch(0.563 0.193 256.2);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.971 0.003 286.4);
-  --secondary-foreground: oklch(0.232 0.004 286.1);
-  --muted: oklch(0.971 0.003 286.4);
-  --muted-foreground: oklch(0.54 0.008 286.1);
-  --accent: oklch(0.932 0.007 286.3);
-  --accent-foreground: oklch(0.232 0.004 286.1);
+  --popover-foreground: oklch(0.24 0.012 230);
+  --primary: oklch(0.5 0.09 192);
+  --primary-foreground: oklch(0.99 0.004 192);
+  --secondary: oklch(0.958 0.008 85);
+  --secondary-foreground: oklch(0.24 0.012 230);
+  --muted: oklch(0.958 0.008 85);
+  --muted-foreground: oklch(0.5 0.014 230);
+  --accent: oklch(0.93 0.012 85);
+  --accent-foreground: oklch(0.24 0.012 230);
   --destructive: oklch(0.553 0.225 27.3);
-  --border: oklch(0.923 0.007 286.3);
-  --input: oklch(0.865 0.007 286.3);
-  --ring: oklch(0.603 0.218 257.4 / 0.5);
-  --chart-1: #007aff;
-  --chart-2: #ff9500;
-  --chart-3: #5856d6;
-  --chart-4: #30b0c7;
-  --chart-5: #34c759;
-  --sidebar: oklch(0.971 0.003 286.4);
-  --sidebar-foreground: oklch(0.232 0.004 286.1);
-  --sidebar-primary: oklch(0.563 0.193 256.2);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.923 0.007 286.3);
-  --sidebar-accent-foreground: oklch(0.232 0.004 286.1);
-  --sidebar-border: oklch(0.923 0.007 286.3);
-  --sidebar-ring: oklch(0.603 0.218 257.4 / 0.5);
+  --border: oklch(0.905 0.01 85);
+  --input: oklch(0.85 0.012 85);
+  --ring: oklch(0.55 0.1 192 / 0.5);
+  --chart-1: #0e7c74;
+  --chart-2: #e07b00;
+  --chart-3: #5b5bd6;
+  --chart-4: #c2417a;
+  --chart-5: #3f8f3a;
+  --sidebar: oklch(0.952 0.009 85);
+  --sidebar-foreground: oklch(0.24 0.012 230);
+  --sidebar-primary: oklch(0.5 0.09 192);
+  --sidebar-primary-foreground: oklch(0.99 0.004 192);
+  --sidebar-accent: oklch(0.905 0.014 85);
+  --sidebar-accent-foreground: oklch(0.24 0.012 230);
+  --sidebar-border: oklch(0.9 0.01 85);
+  --sidebar-ring: oklch(0.55 0.1 192 / 0.5);
   --success: oklch(0.58 0.16 147.4);
   --warning: oklch(0.64 0.16 62.6);
   --highlight: oklch(0.93 0.09 95 / 0.55);
@@ -51,38 +51,38 @@
 }
 
 .dark {
-  --background: oklch(0 0 0);
-  --foreground: oklch(0.971 0.003 286.4);
-  --canvas: oklch(0 0 0);
-  --card: oklch(0.227 0.004 286.1);
-  --card-foreground: oklch(0.971 0.003 286.4);
-  --popover: oklch(0.294 0.004 286.2);
-  --popover-foreground: oklch(0.971 0.003 286.4);
-  --primary: oklch(0.624 0.206 255.5);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.294 0.004 286.2);
-  --secondary-foreground: oklch(0.971 0.003 286.4);
-  --muted: oklch(0.227 0.004 286.1);
-  --muted-foreground: oklch(0.681 0.007 286.2);
-  --accent: oklch(0.349 0.003 286.2);
-  --accent-foreground: oklch(0.971 0.003 286.4);
+  --background: oklch(0.17 0.008 230);
+  --foreground: oklch(0.95 0.006 85);
+  --canvas: oklch(0.15 0.008 230);
+  --card: oklch(0.215 0.01 230);
+  --card-foreground: oklch(0.95 0.006 85);
+  --popover: oklch(0.25 0.01 230);
+  --popover-foreground: oklch(0.95 0.006 85);
+  --primary: oklch(0.76 0.11 188);
+  --primary-foreground: oklch(0.2 0.03 200);
+  --secondary: oklch(0.26 0.01 230);
+  --secondary-foreground: oklch(0.95 0.006 85);
+  --muted: oklch(0.215 0.01 230);
+  --muted-foreground: oklch(0.7 0.012 230);
+  --accent: oklch(0.3 0.012 230);
+  --accent-foreground: oklch(0.95 0.006 85);
   --destructive: oklch(0.663 0.224 28.3);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.669 0.181 251.8 / 0.6);
-  --chart-1: #0a84ff;
-  --chart-2: #d47604;
-  --chart-3: #6e6cf0;
-  --chart-4: #1f9fb5;
-  --chart-5: #25b04c;
-  --sidebar: oklch(0.201 0 0);
-  --sidebar-foreground: oklch(0.971 0.003 286.4);
-  --sidebar-primary: oklch(0.624 0.206 255.5);
-  --sidebar-primary-foreground: oklch(1 0 0);
+  --ring: oklch(0.76 0.11 188 / 0.6);
+  --chart-1: #3fc1b3;
+  --chart-2: #f2a03d;
+  --chart-3: #8f8ff0;
+  --chart-4: #e7709f;
+  --chart-5: #6cc163;
+  --sidebar: oklch(0.19 0.009 230);
+  --sidebar-foreground: oklch(0.95 0.006 85);
+  --sidebar-primary: oklch(0.76 0.11 188);
+  --sidebar-primary-foreground: oklch(0.2 0.03 200);
   --sidebar-accent: oklch(1 0 0 / 10%);
   --sidebar-accent-foreground: oklch(0.971 0.003 286.4);
   --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.669 0.181 251.8 / 0.6);
+  --sidebar-ring: oklch(0.76 0.11 188 / 0.6);
   --success: oklch(0.756 0.208 147);
   --warning: oklch(0.782 0.171 67.2);
   --highlight: oklch(0.6 0.12 90 / 0.35);
@@ -93,8 +93,8 @@
 }
 
 @theme inline {
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", var(--font-inter), "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, Menlo, monospace;
   --font-heading: var(--font-sans);
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 4px);
@@ -151,13 +151,13 @@
   html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    font-feature-settings: "cv11", "ss01";
+    font-variant-numeric: tabular-nums;
   }
   body {
-    @apply bg-canvas font-sans text-[15px] leading-[22px] tracking-[-0.01em] text-foreground;
+    @apply bg-canvas font-sans text-[15px] leading-[22px] text-foreground;
   }
   ::selection {
-    background: oklch(0.603 0.218 257.4 / 0.25);
+    background: oklch(0.55 0.1 192 / 0.22);
   }
 }
 
